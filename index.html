@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifica Cambio Turno</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f7fb; padding: 20px; color: #1b2430; }
+    .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #dde3ea; max-width: 600px; margin: 0 auto 20px; }
+    h2 { margin-top: 0; color: #0056b3; font-size: 18px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    label { font-size: 13px; font-weight: bold; color: #5f6b7a; display: block; margin-top: 8px; }
+    input[type="datetime-local"] { width: 100%; padding: 8px; border: 1px solid #dde3ea; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+    button:hover { background: #003f85; }
+    #risultato { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-weight: bold; white-space: pre-line; }
+    .verde { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .rosso { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2><i class="fas fa-user"></i> 1. I Tuoi 3 Nodi Temporali</h2>
+  <label>Fine Turno Precedente</label>
+  <input type="datetime-local" id="u-precedente">
+  <div class="grid">
+    <div>
+      <label>Inizio Turno Scambiato</label>
+      <input type="datetime-local" id="u-attuale-inizio">
+    </div>
+    <div>
+      <label>Fine Turno Scambiato</label>
+      <input type="datetime-local" id="u-attuale-fine">
+    </div>
+  </div>
+  <label>Inizio Turno Successivo</label>
+  <input type="datetime-local" id="u-successivo">
+</div>
+
+<div class="card">
+  <h2><i class="fas fa-user-friends"></i> 2. I 3 Nodi Temporali del Collega</h2>
+  <label>Fine Turno Precedente</label>
+  <input type="datetime-local" id="c-precedente">
+  <div class="grid">
+    <div>
+      <label>Inizio Turno Scambiato</label>
+      <input type="datetime-local" id="c-attuale-inizio">
+    </div>
+    <div>
+      <label>Fine Turno Scambiato</label>
+      <input type="datetime-local" id="c-attuale-fine">
+    </div>
+  </div>
+  <label>Inizio Turno Successivo</label>
+  <input type="datetime-local" id="c-successivo">
+</div>
+
+<div class="card" style="border:none; padding:0;">
+  <button onclick="inviaVerifica()">Verifica Stacco e Compatibilità</button>
+  <div id="risultato"></div>
+</div>
+
+<script>
+  // Inserisci qui l'URL generato su Google Apps Script
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxAh-HecOJSmq8Yop88gOkrS1rGFf1vERBxKso7jHPgLO-SUCWQjVbwDchI7CJyez37g/exec";
+
+  async function inviaVerifica() {
+    const boxEsito = document.getElementById('risultato');
+    boxEsito.style.display = "none";
+
+    const payload = {
+      datiUtente: {
+        finePrecedente: document.getElementById('u-precedente').value,
+        inizioAttuale: document.getElementById('u-attuale-inizio').value,
+        fineAttuale: document.getElementById('u-attuale-fine').value,
+        inizioSuccessivo: document.getElementById('u-successivo').value
+      },
+      datiCollega: {
+        finePrecedente: document.getElementById('c-precedente').value,
+        inizioAttuale: document.getElementById('c-attuale-inizio').value,
+        fineAttuale: document.getElementById('c-attuale-fine').value,
+        inizioSuccessivo: document.getElementById('c-successivo').value
+      }
+    };
+
+    // Validazione rapida
+    if (!payload.datiUtente.finePrecedente || !payload.datiUtente.inizioAttuale || !payload.datiCollega.finePrecedente || !payload.datiCollega.inizioAttuale) {
+      alert("Compila tutti i campi orari prima di procedere!");
+      return;
+    }
+
+    boxEsito.style.display = "block";
+    boxEsito.className = "";
+    boxEsito.textContent = "Calcolo in corso nella scatola virtuale...";
+
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "cors",
+        body: JSON.stringify(payload)
+      });
+      
+      const res = await response.json();
+      
+      if (res.esito === "VERDE") {
+        boxEsito.className = "verde";
+      } else {
+        boxEsito.className = "rosso";
+      }
+      boxEsito.textContent = res.messaggio;
+
+    } catch (err) {
+      boxEsito.className = "rosso";
+      boxEsito.textContent = "Errore di connessione al servizio di verifica.";
+    }
+  }
+</script>
+
+</body>
+</html>
