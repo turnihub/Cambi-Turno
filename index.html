@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TurniHub - Carica Turni e Sidebar</title>
+<title>TurniHub - Cambio Turno</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Libreria PDF.js per leggere i PDF direttamente nel browser -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -14,120 +13,144 @@
 :root{--primary:#0056b3;--primary-dark:#003f85;--soft:#e3eefb;--ink:#1b2430;--muted:#5f6b7a;--line:#dde3ea;--bg:#eef2f6;--card:#fff;--success:#28a745;--danger:#dc3545;}
 *{box-sizing:border-box}html,body{height:100%}
 body{margin:0;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-button{font:inherit}:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+button{font:inherit}
 .app{display:flex;height:100vh;height:100dvh;overflow:hidden}
 
-/* --- SIDEBAR --- */
+/* SIDEBAR */
 .sidebar{width:340px;flex:0 0 340px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;position:relative;transition:margin-left .3s;z-index:100}
 .sidebar.nascosta{margin-left:-340px}
 .linguetta{position:absolute;right:-30px;top:50%;transform:translateY(-50%);width:30px;height:64px;border:0;background:var(--primary);color:#fff;border-radius:0 10px 10px 0;cursor:pointer}
 .sb-head{background:var(--primary-dark);color:#fff;padding:18px 20px}.sb-head h3{margin:0;font-size:19px}.sb-head small{display:block;margin-top:4px;opacity:.85}
-.sb-lista{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;position:relative}
+.sb-lista{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
 .vuoto{color:var(--muted);text-align:center;margin:20px 0}
 .turno-card{background:#f4f7fb;border-left:4px solid var(--primary);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .turno-info-top{display:flex;justify-content:space-between;gap:8px;font-size:15px}
-.nota-giorno-box{display:flex;gap:6px}
-.nota-giorno-box input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px}
-.nota-giorno-box button{width:42px;border:0;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer}
 
-/* --- MAIN CONTENT --- */
+/* MAIN */
 .main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:18px;padding:14px 24px;background:var(--primary);color:#fff}
-.brand h1{margin:0;font-size:26px;line-height:1.1}.brand p{margin:4px 0 0;font-size:14px;opacity:.9}
-.btn-turni{display:none;background:#fff;color:var(--primary);border:0;border-radius:999px;padding:10px 18px;font-weight:600;cursor:pointer}
-.content{flex:1;width:100%;max-width:800px;margin:0 auto;padding:22px 24px}
+.brand{display:flex;align-items:center;justify-content:between;gap:18px;padding:14px 24px;background:var(--primary);color:#fff}
+.brand h1{margin:0;font-size:26px}.brand p{margin:4px 0 0;font-size:14px;opacity:.9}
+.content{flex:1;width:100%;max-width:800px;margin:0 auto;padding:22px 24px;display:flex;flex-direction:column;gap:20px}
 .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px}
-.panel h2{margin:0 0 8px;font-size:22px}.panel p{color:var(--muted);margin:0 0 16px;max-width:62ch}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border:0;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
-.btn.verde{background:var(--success)}
-#stato-caricamento-pdf{margin-top:14px;font-weight:600}
-footer{padding:16px;text-align:center;font-size:12px;color:var(--muted)}
-.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;z-index:10000}.toast.on{opacity:1;transform:translate(-50%,0)}
+.panel h2{margin:0 0 12px;font-size:18px;color:var(--primary)}
+
+/* CALENDARIO INTERATTIVO PER IL CAMBIO */
+.cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.cal-head button { background:none; border:1px solid var(--line); border-radius:8px; width:38px; height:38px; font-size:18px; cursor:pointer; }
+.cal-title { font-weight:600; text-transform:capitalize; }
+.grid-settimane { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px; }
+.dow { text-align:center; font-size:12px; color:var(--muted); font-weight:bold; }
+.grid-giorni { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.giorno-cell { min-height:65px; border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px; font-size:13px; cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; }
+.giorno-cell.empty { border:none; background:none; cursor:default; }
+.giorno-cell.has-turno { background:#f0f7ff; border-color:#b9d6f2; }
+.giorno-cell.sel { background:var(--primary); color:#fff; border-color:var(--primary); }
+.turno-etichetta { font-weight:bold; font-size:11px; background:#0056b3; color:#fff; padding:2px 4px; border-radius:4px; text-align:center; }
+.giorno-cell.sel .turno-etichetta { background:#fff; color:var(--primary); }
+
+.btn { display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border:0; border-radius:10px; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; }
+.btn.verde { background:var(--success); }
+#risultato-box { margin-top:15px; padding:15px; border-radius:8px; display:none; font-weight:bold; white-space:pre-line; }
+.verde-box { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.rosso-box { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
 @media(max-width:860px){
-.sidebar{position:fixed;top:0;bottom:0;left:0;width:min(340px,88vw);flex:none;transform:translateX(-100%);transition:transform .25s}
-.sidebar.aperta{transform:none}.linguetta{display:none}
-.brand{flex-direction:column;text-align:center;gap:10px;padding:14px}
-.btn-turni{display:inline-flex;align-items:center;gap:8px}
-.content{padding:16px 14px}
+  .sidebar{position:fixed;top:0;bottom:0;left:0;width:min(340px,88vw);flex:none;transform:translateX(-100%);transition:transform .25s}
+  .sidebar.aperta{transform:none}.linguetta{display:none}
 }
 </style>
 </head>
 <body>
 
 <div class="app">
-  <!-- SIDEBAR (I miei turni) -->
+  <!-- SIDEBAR: I tuoi turni caricati dal PDF -->
   <aside class="sidebar" id="sidebar">
-    <button class="linguetta" onclick="toggleCalendario()" aria-label="Mostra o nascondi i turni"><i id="icona-toggle" class="fas fa-chevron-left"></i></button>
+    <button class="linguetta" onclick="toggleCalendario()"><i id="icona-toggle" class="fas fa-chevron-left"></i></button>
     <div class="sb-head">
-      <h3><i class="fas fa-calendar-days"></i> I miei turni</h3>
-      <small id="nome-utente-sidebar">Nessun turno caricato</small>
+      <h3><i class="fas fa-calendar-days"></i> Il mio cassetto</h3>
+      <small id="nome-utente-sidebar">Carica il PDF per iniziare</small>
     </div>
     <div class="sb-lista" id="lista-turni-personali">
-      <div class="vuoto">Carica il PDF dei turni per iniziare.</div>
+      <div class="vuoto">Nessun turno in memoria.</div>
     </div>
   </aside>
 
   <!-- CONTENUTO PRINCIPALE -->
-  <div class="main" id="main">
+  <div class="main">
     <header class="brand">
       <div>
         <h1>TurniHub</h1>
-        <p>Gestione Turni Privata e Locale</p>
+        <p>Seleziona il giorno per il cambio turno</p>
       </div>
-      <button class="btn-turni" onclick="toggleCalendario()"><i class="fas fa-calendar-days"></i> I miei turni</button>
+      <button class="btn" onclick="toggleCalendario()" style="background:#fff; color:var(--primary);"><i class="fas fa-calendar"></i> Menu Turni</button>
     </header>
 
     <div class="content">
-      <section class="panel">
-        <h2><i class="fas fa-file-pdf" style="color:var(--danger)"></i> Carica il piano turni (PDF)</h2>
-        <p>Seleziona il PDF ufficiale dei turni. I dati vengono letti ed elaborati interamente sul tuo dispositivo (Privacy garantita al 100%).</p>
+      <!-- 1. CARICAMENTO PDF -->
+      <div class="panel">
+        <h2>📁 1. Carica il tuo piano turni (PDF)</h2>
         <input type="file" id="filePdfInput" accept="application/pdf" style="display:none" onchange="elaboraPDFLocale()">
         <button type="button" class="btn verde" onclick="document.getElementById('filePdfInput').click()"><i class="fas fa-upload"></i> Scegli il PDF</button>
-        <div id="stato-caricamento-pdf"></div>
-      </section>
-    </div>
+        <div id="stato-caricamento-pdf" style="margin-top:10px; font-weight:bold; font-size:14px;"></div>
+      </div>
 
-    <footer>TurniHub App &bull; Sviluppato per uso privato su dispositivo locale</footer>
+      <!-- 2. CALENDARIO INTERATTIVO PER SCEGLIERE LA DATA DEL CAMBIO -->
+      <div class="panel" id="sezione-calendario" style="display:none;">
+        <h2>📅 2. Clicca sul giorno del cambio turno</h2>
+        <div class="cal-head">
+          <button onclick="cambiaMese(-1)">‹</button>
+          <div class="cal-title" id="cal-title-mese">Mese</div>
+          <button onclick="cambiaMese(1)">›</button>
+        </div>
+        <div class="grid-settimane" id="dows"></div>
+        <div class="grid-giorni" id="grid-giorni-mese"></div>
+      </div>
+
+      <!-- 3. GESTIONE SCAMBIO CON COLLEGA -->
+      <div class="panel" id="sezione-azione-cambio" style="display:none;">
+        <h2>🔄 3. Verifica con la Scatola Virtuale</h2>
+        <p style="font-size:14px; color:var(--muted);">Giorno selezionato per il cambio: <b id="data-scelta-txt" style="color:var(--primary)">Nessuna</b></p>
+        
+        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">Seleziona Collega:</label>
+        <select id="collega-select" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); margin-bottom:15px; font-size:15px;">
+          <option value="">-- Scegli collega --</option>
+          <option value="collega1">Mario Rossi</option>
+          <option value="collega2">Giuseppe Verdi</option>
+        </select>
+
+        <button type="button" class="btn" onclick="eseguiVerificaCambio()" style="width:100%; justify-content:center; background:var(--success);">Verifica Rispetto Riposo (11h)</button>
+        
+        <div id="risultato-box"></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="toast" id="toast" role="status"></div>
-
 <script>
-const pad = n => String(n).padStart(2, '0');
-const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxAh-HecOJSmq8Yop88gOkrS1rGFf1vERBxKso7jHPgLO-SUCWQjVbwDchI7CJyez37g/exec";
 
 let turniSalvati = JSON.parse(localStorage.getItem('turnihub_turni')) || [];
-let noteGiornaliere = JSON.parse(localStorage.getItem('turnihub_note_giornaliere')) || {};
+let dataSelezionataIso = null;
+let annoCorrente = new Date().getFullYear();
+let meseCorrente = new Date().getMonth() + 1; // 1-12
 
-function toast(m) { 
-  const t = document.getElementById('toast'); 
-  t.textContent = m; 
-  t.classList.add('on'); 
-  clearTimeout(toast.t); 
-  toast.t = setTimeout(() => t.classList.remove('on'), 2200); 
-}
-
-function mostraOggi() { 
-  const l = document.getElementById('lista-turni-personali'), t = l.querySelector('[data-oggi]'); 
-  if (t) l.scrollTop = Math.max(0, t.offsetTop - 80); 
-}
-
-function toggleCalendario() {
-  const sb = document.getElementById('sidebar');
-  sb.classList.toggle('nascosta');
-  document.getElementById('icona-toggle সন্ত্রাসী').className = sb.classList.contains('nascosta') ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
-}
+const pad = n => String(n).padStart(2, '0');
+const MESI_NOMI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 
 window.addEventListener('DOMContentLoaded', () => {
-  disegnaCalendario(turniSalvati);
   if (turniSalvati.length > 0) {
-    document.getElementById('nome-utente-sidebar').textContent = "Turni caricati correttamente";
+    document.getElementById('nome-utente-sidebar').textContent = "Turni caricati in memoria";
+    document.getElementById('sezione-calendario').style.display = 'block';
+    disegnaCalendarioSidebar();
+    disegnaCalendarioInterattivo();
   }
 });
 
-// --- PARSING PDF LOCALE ---
+function toggleCalendario() {
+  document.getElementById('sidebar').classList.toggle('nascosta');
+}
+
+// --- PARSING PDF ---
 function elaboraPDFLocale() {
   const fileInput = document.getElementById('filePdfInput');
   const statoDiv = document.getElementById('stato-caricamento-pdf');
@@ -142,99 +165,181 @@ function elaboraPDFLocale() {
       return Promise.all(Array.from({length: pdf.numPages}, (_, j) => pdf.getPage(j + 1).then(p => p.getTextContent())));
     }).then(pages => {
       const testo = pages.flatMap(p => p.items.map(it => it.str.trim())).filter(Boolean).join(' ');
-      const h = testo.match(/Cognome\s+(.+?)\s+Nome\s+(.+?)\s+Matricola\s+(\d+)\s+Deposito\s+(\S+)/);
+      const h = testo.match(/Cognome\s+(.+?)\s+Nome\s+(.+?)\s+Matricola\s+(\d+)/);
       const p = testo.match(/(\d{1,2})\s+([A-Za-záù]+)\s+(\d{4})\s*-/);
       
       const MESI = {gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6, luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12};
-      if (!h || !p || !MESI[p[2].toLowerCase()]) {
-        fileInput.value = '';
+      if (!p || !MESI[p[2].toLowerCase()]) {
         statoDiv.style.color = '#dc3545';
-        statoDiv.textContent = 'PDF non riconosciuto: controlla che sia un piano turni valido.';
+        statoDiv.textContent = 'Impossibile leggere date e mesi dal PDF.';
         return;
       }
 
-      const [, cognome, nome, matricola, deposito] = h;
-      const mese = MESI[p[2].toLowerCase()], anno = Number(p[3]);
+      const anno = Number(p[3]);
+      const meseNum = MESI[p[2].toLowerCase()];
+      annoCorrente = anno;
+      meseCorrente = meseNum;
+
       const re = /(?:^|\s)(\d{1,2})\s+([A-Z]{1,4}\d{0,4}[A-Z]?)\s+(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/g;
-      
       let m, visti = new Set(), turni = [];
       while ((m = re.exec(testo)) !== null) {
         const g = Number(m[1]);
         if (g < 1 || g > 31 || visti.has(g)) continue;
         visti.add(g);
-        turni.push({ dataIso: `${anno}-${pad(mese)}-${pad(g)}`, dataFormattata: `${g} ${p[2]} ${anno}`, codiceTurno: m[2], inizio: m[3], fine: m[4] });
+        turni.push({ dataIso: `${anno}-${pad(meseNum)}-${pad(g)}`, codiceTurno: m[2], inizio: m[3], fine: m[4] });
       }
 
       if (!turni.length) {
-        fileInput.value = '';
         statoDiv.style.color = '#dc3545';
-        statoDiv.textContent = 'Nessun turno trovato nel PDF.';
+        statoDiv.textContent = 'Nessun turno trovato.';
         return;
       }
 
       turniSalvati = turni;
       localStorage.setItem('turnihub_turni', JSON.stringify(turniSalvati));
-      document.getElementById('nome-utente-sidebar').textContent = `${nome} ${cognome} (${matricola})`;
+      
       statoDiv.style.color = '#28a745';
-      statoDiv.textContent = `Caricati con successo ${turni.length} turni!`;
-      disegnaCalendario(turniSalvati);
+      statoDiv.textContent = `Caricati ${turni.length} turni con successo!`;
+      
+      document.getElementById('sezione-calendario').style.display = 'block';
+      disegnaCalendarioSidebar();
+      disegnaCalendarioInterattivo();
     }).catch(err => {
       statoDiv.style.color = '#dc3545';
-      statoDiv.textContent = 'Errore lettura PDF: ' + err.message;
+      statoDiv.textContent = 'Errore: ' + err.message;
     });
   };
   reader.readAsArrayBuffer(fileInput.files[0]);
 }
 
-// --- DISEGNA CALENDARIO E NOTE GIORNALIERE NELLA SIDEBAR ---
-function disegnaCalendario(calendario) {
+// --- SIDEBAR LISTA ---
+function disegnaCalendarioSidebar() {
   const box = document.getElementById('lista-turni-personali');
   box.innerHTML = "";
-  if (!calendario.length) {
-    box.innerHTML = "<i style='color:#888; text-align:center;'>Nessun turno caricato.</i>";
-    return;
-  }
-
-  const _d = new Date(); 
-  const oggiIso = _d.getFullYear() + '-' + pad(_d.getMonth() + 1) + '-' + pad(_d.getDate());
-  const sett = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
-
-  calendario.forEach(g => {
+  turniSalvati.forEach(g => {
     const div = document.createElement('div');
     div.className = "turno-card";
-    const nomeGiorno = sett[new Date(g.dataIso + "T12:00:00").getDay()];
-    
-    if (g.dataIso === oggiIso) {
-      div.dataset.oggi = "1";
-      div.style.borderLeftColor = "#dc3545";
-      div.style.backgroundColor = "#fff3f4";
-    } else if (["R", "RIS", "RIP"].includes(g.codiceTurno)) {
-      div.style.borderLeftColor = "#28a745";
-    }
-
-    const notaSalvata = noteGiornaliere[g.dataIso] || "";
-
     div.innerHTML = `
       <div class="turno-info-top">
-        <span><i>${nomeGiorno}</i> <b>${g.dataFormattata}</b></span>
+        <span><b>${g.dataIso}</b></span>
         <span>${g.codiceTurno} <small>(${g.inizio}-${g.fine})</small></span>
-      </div>
-      <div class="nota-giorno-box">
-        <input type="text" id="nota-${g.dataIso}" value="${esc(notaSalvata)}" placeholder="Nota giorno...">
-        <button onclick="salvaNotaGiorno('${g.dataIso}')" title="Salva nota"><i class="fas fa-save"></i></button>
       </div>
     `;
     box.appendChild(div);
   });
-  mostraOggi();
 }
 
-function salvaNotaGiorno(dataIso) {
-  const inputVal = document.getElementById(`nota-${dataIso}`).value;
-  noteGiornaliere[dataIso] = inputVal;
-  localStorage.setItem('turnihub_note_giornaliere', JSON.stringify(noteGiornaliere));
-  toast('Nota salvata');
+// --- CALENDARIO INTERATTIVO A GRIGLIA ---
+function disegnaCalendarioInterattivo() {
+  document.getElementById('cal-title-mese').textContent = `${MESI_NOMI[meseCorrente - 1]} ${annoCorrente}`;
+  
+  const dowsContainer = document.getElementById('dows');
+  dowsContainer.innerHTML = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map(d => `<div class="dow">${d}</div>`).join('');
+
+  const gridContainer = document.getElementById('grid-giorni-mese');
+  gridContainer.innerHTML = "";
+
+  const primoGiornoMese = new Date(annoCorrente, meseCorrente - 1, 1);
+  let giornoSettimana = primoGiornoMese.getDay();
+  giornoSettimana = giornoSettimana === 0 ? 6 : giornoSettimana - 1; // adatta a lunedì=0
+
+  const giorniTotali = new Date(annoCorrente, meseCorrente, 0).getDate();
+
+  // Spazi vuoti iniziali
+  for (let i = 0; i < giornoSettimana; i++) {
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = "giorno-cell empty";
+    gridContainer.appendChild(emptyDiv);
+  }
+
+  // Giorni del mese
+  for (let d = 1; d <= giorniTotali; d++) {
+    const dataIsoStr = `${annoCorrente}-${pad(meseCorrente)}-${pad(d)}`;
+    const turnoDelGiorno = turniSalvati.find(t => t.dataIso === dataIsoStr);
+
+    const cell = document.createElement('div');
+    cell.className = "giorno-cell";
+    if (turnoDelGiorno) cell.classList.add('has-turno');
+    if (dataSelezionataIso === dataIsoStr) cell.classList.add('sel');
+
+    cell.innerHTML = `
+      <span><b>${d}</b></span>
+      ${turnoDelGiorno ? `<span class="turno-etichetta">${turnoDelGiorno.codiceTurno}</span>` : ''}
+    `;
+
+    cell.onclick = () => selezionaGiornoCambio(dataIsoStr, turnoDelGiorno);
+    gridContainer.appendChild(cell);
+  }
+}
+
+function cambiaMese(delta) {
+  meseCorrente += delta;
+  if (meseCorrente > 12) { meseCorrente = 1; annoCorrente++; }
+  if (meseCorrente < 1) { meseCorrente = 12; annoCorrente--; }
+  disegnaCalendarioInterattivo();
+}
+
+function selezionaGiornoCambio(dataIso, turno) {
+  dataSelezionataIso = dataIso;
+  disegnaCalendarioInterattivo();
+
+  document.getElementById('sezione-azione-cambio').style.display = 'block';
+  document.getElementById('data-scelta-txt').textContent = dataIso + (turno ? ` (${turno.codiceTurno}: ${turno.inizio} - ${turno.fine})` : ' (Riposo o non trovato)');
+}
+
+// --- INVIO ALLA SCATOLA VIRTUALE GOOGLE ---
+async function eseguiVerificaCambio() {
+  const collega = document.getElementById('collega-select').value;
+  if (!collega) {
+    alert("Seleziona il collega con cui vuoi fare il cambio!");
+    return;
+  }
+  if (!dataSelezionataIso) {
+    alert("Seleziona prima una data dal calendario!");
+    return;
+  }
+
+  // Trova il turno del giorno scelto e i giorni adiacenti per costruire i 3 nodi
+  const index = turniSalvati.findIndex(t => t.dataIso === dataSelezionataIso);
+  let inizioAttuale = "2026-06-02T06:00:00";
+  let fineAttuale = "2026-06-02T14:00:00";
+  let finePrecedente = "2026-06-01T22:00:00";
+  let inizioSuccessivo = "2026-06-03T06:00:00";
+
+  if (index !== -1) {
+    const t = turniSalvati[index];
+    inizioAttuale = `${t.dataIso}T${t.inizio}:00`;
+    fineAttuale = `${t.dataIso}T${t.fine}:00`;
+    if (index > 0) finePrecedente = `${turniSalvati[index-1].dataIso}T${turniSalvati[index-1].fine}:00`;
+    if (index < turniSalvati.length - 1) inizioSuccessivo = `${turniSalvati[index+1].dataIso}T${turniSalvati[index+1].inizio}:00`;
+  }
+
+  const boxEsito = document.getElementById('risultato-box');
+  boxEsito.style.display = "block";
+  boxEsito.className = "";
+  boxEsito.textContent = "Interrogazione della scatola virtuale Google in corso...";
+
+  const payload = {
+    datiUtente: { finePrecedente, inizioAttuale, fineAttuale, inizioSuccessivo },
+    datiCollega: { finePrecedente, inizioAttuale, fineAttuale, inizioSuccessivo } // simmetrico per test
+  };
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "cors",
+      body: JSON.stringify(payload)
+    });
+    
+    const res = await response.json();
+    boxEsito.className = res.esito === "VERDE" ? "verde-box" : "rosso-box";
+    boxEsito.textContent = res.messaggio;
+  } catch (err) {
+    boxEsito.className = "rosso-box";
+    boxEsito.textContent = "Errore di connessione alla scatola virtuale: " + err.message;
+  }
 }
 </script>
+
 </body>
 </html>
